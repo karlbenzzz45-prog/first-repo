@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Complete Git & GitHub Guide — Interactive Presentation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'Fira Code', monospace; }
+
+        /* Hide horizontal scrollbar on compact mobile tab strip */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* =====================================================================
+           SEMANTIC SLIDE DESIGN TOKENS (Guaranteed High-Contrast Per Palette)
+           ===================================================================== */
+        .slide-card {
+            --slide-bg: #ffffff;
+            --slide-surface: #f8fafc;
+            --slide-title: #0f172a;
+            --slide-text: #334155;
+            --slide-muted: #64748b;
+            --slide-accent: #f97316;
+            --slide-accent-soft: rgba(249, 115, 22, 0.12);
+            --slide-border: #e2e8f0;
+            --slide-code-bg: #0f172a;
+            --slide-code-header: #1e293b;
+            --slide-code-text: #34d399;
+            --slide-watermark: rgba(15, 23, 42, 0.06);
+
+            background: linear-gradient(145deg, var(--slide-bg) 0%, var(--slide-surface) 100%);
+            color: var(--slide-text);
+            border-color: var(--slide-border);
+            transition: background 0.35s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.35s ease;
+        }
+
+        /* 1. Default Adaptive (Dark App Mode) */
+        html.dark .slide-card[data-palette="adaptive"] {
+            --slide-bg: #0f172a;
+            --slide-surface: #1e293b;
+            --slide-title: #f8fafc;
+            --slide-text: #cbd5e1;
+            --slide-muted: #94a3b8;
+            --slide-accent: #fb923c;
+            --slide-accent-soft: rgba(251, 146, 60, 0.16);
+            --slide-border: #334155;
+            --slide-code-bg: #020617;
+            --slide-code-header: #0f172a;
+            --slide-code-text: #34d399;
+            --slide-watermark: rgba(248, 250, 252, 0.06);
+        }
+
+        /* 2. Urban Noir (Monochrome Charcoal & Crisp Slate) */
+        .slide-card[data-palette="urban-noir"] {
+            --slide-bg: #141416;
+            --slide-surface: #1f1f23;
+            --slide-title: #ffffff;
+            --slide-text: #e4e4e7;
+            --slide-muted: #a1a1aa;
+            --slide-accent: #f4f4f5;
+            --slide-accent-soft: rgba(244, 244, 245, 0.12);
+            --slide-border: #3f3f46;
+            --slide-code-bg: #09090b;
+            --slide-code-header: #18181b;
+            --slide-code-text: #e4e4e7;
+            --slide-watermark: rgba(255, 255, 255, 0.07);
+        }
+
+        /* 3. Midnight Indigo (Deep Navy & Electric Sky) */
+        .slide-card[data-palette="indigo"] {
+            --slide-bg: #0b1120;
+            --slide-surface: #172554;
+            --slide-title: #f8fafc;
+            --slide-text: #e2e8f0;
+            --slide-muted: #93c5fd;
+            --slide-accent: #38bdf8;
+            --slide-accent-soft: rgba(56, 189, 248, 0.16);
+            --slide-border: #1e3a8a;
+            --slide-code-bg: #020617;
+            --slide-code-header: #0f172a;
+            --slide-code-text: #7dd3fc;
+            --slide-watermark: rgba(56, 189, 248, 0.09);
+        }
+
+        /* 4. Emerald Obsidian (Forest Slate & Vibrant Emerald) */
+        .slide-card[data-palette="emerald"] {
+            --slide-bg: #070d0b;
+            --slide-surface: #06281e;
+            --slide-title: #ecfdf5;
+            --slide-text: #d1fae5;
+            --slide-muted: #6ee7b7;
+            --slide-accent: #10b981;
+            --slide-accent-soft: rgba(16, 185, 129, 0.18);
+            --slide-border: #065f46;
+            --slide-code-bg: #020605;
+            --slide-code-header: #062019;
+            --slide-code-text: #34d399;
+            --slide-watermark: rgba(16, 185, 129, 0.09);
+        }
+
+        /* 5. Sunset Crimson (Warm Dark Plum & Coral Crimson) */
+        .slide-card[data-palette="crimson"] {
+            --slide-bg: #180e14;
+            --slide-surface: #2d121e;
+            --slide-title: #fff1f2;
+            --slide-text: #ffe4e6;
+            --slide-muted: #fda4af;
+            --slide-accent: #fb7185;
+            --slide-accent-soft: rgba(251, 113, 133, 0.18);
+            --slide-border: #881337;
+            --slide-code-bg: #0d060a;
+            --slide-code-header: #1f0c16;
+            --slide-code-text: #fbbf24;
+            --slide-watermark: rgba(251, 113, 133, 0.09);
+        }
+
+        /* 6. Nordic Paper (Warm Alabaster Paper & Deep Cobalt Ink) */
+        .slide-card[data-palette="nordic"] {
+            --slide-bg: #faf8f5;
+            --slide-surface: #f1ede4;
+            --slide-title: #0f172a;
+            --slide-text: #1e293b;
+            --slide-muted: #475569;
+            --slide-accent: #1d4ed8;
+            --slide-accent-soft: rgba(29, 78, 216, 0.10);
+            --slide-border: #cbd5e1;
+            --slide-code-bg: #0f172a;
+            --slide-code-header: #1e293b;
+            --slide-code-text: #93c5fd;
+            --slide-watermark: rgba(29, 78, 216, 0.07);
+        }
+
+        /* 7. Mint Blueprint (Soft Ice Mint & Deep Teal Ink) */
+        .slide-card[data-palette="mint"] {
+            --slide-bg: #f0fdf9;
+            --slide-surface: #dcfce7;
+            --slide-title: #064e3b;
+            --slide-text: #134e4a;
+            --slide-muted: #0f766e;
+            --slide-accent: #0d9488;
+            --slide-accent-soft: rgba(13, 148, 136, 0.12);
+            --slide-border: #99f6e4;
+            --slide-code-bg: #042f2e;
+            --slide-code-header: #115e59;
+            --slide-code-text: #5eead4;
+            --slide-watermark: rgba(13, 148, 136, 0.08);
+        }
+
+        /* 8. Royal Amethyst (Deep Velvet Violet & Lavender Gold) */
+        .slide-card[data-palette="amethyst"] {
+            --slide-bg: #130c24;
+            --slide-surface: #241445;
+            --slide-title: #faf5ff;
+            --slide-text: #f3e8ff;
+            --slide-muted: #d8b4fe;
+            --slide-accent: #c084fc;
+            --slide-accent-soft: rgba(192, 132, 252, 0.18);
+            --slide-border: #581c87;
+            --slide-code-bg: #090514;
+            --slide-code-header: #1a1033;
+            --slide-code-text: #fde047;
+            --slide-watermark: rgba(192, 132, 252, 0.09);
+        }
+
+        /* Semantic Element Bindings */
+        .slide-title-text { color: var(--slide-title); }
+        .slide-subtitle-text { color: var(--slide-muted); }
+        .slide-body-text { color: var(--slide-text); }
+        .slide-accent-color { color: var(--slide-accent); }
+        .slide-accent-pill {
+            background-color: var(--slide-accent-soft);
+            color: var(--slide-accent);
+            border: 1px solid var(--slide-border);
+        }
+        .slide-code-box {
+            background-color: var(--slide-code-bg);
+            border-color: var(--slide-border);
+        }
+        .slide-code-head {
+            background-color: var(--slide-code-header);
+            border-color: var(--slide-border);
+        }
+        .slide-code-content { color: var(--slide-code-text); }
+
+        /* =====================================================================
+           POWERPOINT-INSPIRED DESIGNER SLIDE TEMPLATES (Non-intrusive Layers)
+           ===================================================================== */
+        .ppt-decor {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .ppt-layer { display: none; }
+
+        /* 1. Classic Clean */
+        .slide-card[data-template="classic"] .ppt-layer { display: none; }
+
+        /* 2. Urban Monochrome: Left structural pillar + hairline rule + sequential watermark */
+        .slide-card[data-template="urban"] {
+            padding-left: 2.25rem;
+        }
+        @media (min-width: 640px) {
+            .slide-card[data-template="urban"] { padding-left: 3.5rem; }
+        }
+        .slide-card[data-template="urban"] .ppt-urban { display: block; }
+        .ppt-urban-pillar {
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 14px;
+            background: var(--slide-accent);
+        }
+        @media (min-width: 640px) {
+            .ppt-urban-pillar { width: 22px; }
+        }
+        .ppt-urban-hairline {
+            position: absolute;
+            left: 18px; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--slide-accent);
+            opacity: 0.35;
+        }
+        @media (min-width: 640px) {
+            .ppt-urban-hairline { left: 28px; }
+        }
+        .ppt-urban-watermark {
+            position: absolute;
+            right: 1.5rem;
+            top: 3.25rem;
+            font-size: 6.5rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.05em;
+            color: var(--slide-watermark);
+            user-select: none;
+        }
+
+        /* 3. Ion Boardroom: Top executive header band with accent underline */
+        .slide-card[data-template="ion"] .ppt-ion { display: block; }
+        .ppt-ion-ribbon {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--slide-accent) 0%, var(--slide-border) 100%);
+        }
+        .ppt-ion-band {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 154px;
+            background: var(--slide-accent-soft);
+            border-bottom: 2px solid var(--slide-accent);
+            opacity: 0.55;
+        }
+
+        /* 4. Berlin Editorial: Top editorial tab + vertical left margin rule */
+        .slide-card[data-template="berlin"] .ppt-berlin { display: block; }
+        .ppt-berlin-tab {
+            position: absolute;
+            top: 0; left: 2.5rem;
+            width: 72px; height: 10px;
+            background: var(--slide-accent);
+        }
+        .ppt-berlin-rule {
+            position: absolute;
+            top: 4.5rem; bottom: 2rem; left: 2.5rem;
+            width: 2px;
+            background: var(--slide-accent);
+            opacity: 0.25;
+        }
+        .slide-card[data-template="berlin"] #view-mode-content {
+            padding-left: 1.25rem;
+        }
+
+        /* 5. Facet Geometric: Low-poly geometric corner SVG accents */
+        .slide-card[data-template="facet"] .ppt-facet { display: block; }
+
+        /* 6. Gallery Frame: Double-line inner matte frame with corner registration ticks */
+        .slide-card[data-template="gallery"] .ppt-gallery { display: block; }
+        .ppt-gallery-frame {
+            position: absolute;
+            inset: 10px;
+            border: 1px solid var(--slide-accent);
+            opacity: 0.28;
+            border-radius: 12px;
+        }
+        .ppt-gallery-tl {
+            position: absolute;
+            top: 10px; left: 10px;
+            width: 24px; height: 24px;
+            border-top: 3px solid var(--slide-accent);
+            border-left: 3px solid var(--slide-accent);
+            border-top-left-radius: 12px;
+        }
+        .ppt-gallery-br {
+            position: absolute;
+            bottom: 10px; right: 10px;
+            width: 24px; height: 24px;
+            border-bottom: 3px solid var(--slide-accent);
+            border-right: 3px solid var(--slide-accent);
+            border-bottom-right-radius: 12px;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full border-b border-slate-200 dark:border-slate-800 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+            <!-- Brand -->
+            <div class="flex items-center space-x-2.5 shrink-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+                    <!-- Clean Git Branch SVG -->
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="18" cy="6" r="3"/>
+                        <path d="M6 9v6c0 1.66 1.34 3 3 3h6M18 9v6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-base lg:text-lg tracking-tight leading-tight">The Complete Git Guide</h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden lg:block">Master Git &amp; GitHub • Interactive Deck</p>
+                </div>
+            </div>
+
+            <!-- Desktop 5-Section Tabs -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700" aria-label="Course Curriculum Sections">
+                <button type="button" data-section-btn="intro" class="px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all">Intro</button>
+                <button type="button" data-section-btn="basics" class="px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all">Basics</button>
+                <button type="button" data-section-btn="intermediate" class="px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all">Intermediate</button>
+                <button type="button" data-section-btn="advanced" class="px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all">Advanced</button>
+                <button type="button" data-section-btn="summary" class="px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all">Summary</button>
+            </nav>
+
+            <!-- Global App Actions -->
+            <div class="flex items-center space-x-2 shrink-0">
+                <!-- Reset All Button -->
+                <button type="button" id="btn-open-reset" class="flex items-center space-x-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors" title="Reset All Slides & Designs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span class="hidden sm:inline">Reset All</span>
+                </button>
+
+                <!-- Global App Dark/Light Toggle -->
+                <button type="button" id="btn-toggle-shell-theme" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-300 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle App Dark/Light Mode" aria-label="Toggle App Dark/Light Mode">
+                    <svg class="w-5 h-5 dark:hidden text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                    <svg class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile 5-Section Tabs (Overflow-safe horizontal strip) -->
+        <div class="md:hidden flex overflow-x-auto no-scrollbar border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" aria-label="Mobile Course Sections">
+            <button type="button" data-section-btn="intro" data-mobile="true" class="flex-1 min-w-[64px] py-2.5 px-2 text-center text-[11px] font-semibold border-b-2 border-transparent whitespace-nowrap">Intro</button>
+            <button type="button" data-section-btn="basics" data-mobile="true" class="flex-1 min-w-[68px] py-2.5 px-2 text-center text-[11px] font-semibold border-b-2 border-transparent whitespace-nowrap">Basics</button>
+            <button type="button" data-section-btn="intermediate" data-mobile="true" class="flex-1 min-w-[88px] py-2.5 px-2 text-center text-[11px] font-semibold border-b-2 border-transparent whitespace-nowrap">Intermediate</button>
+            <button type="button" data-section-btn="advanced" data-mobile="true" class="flex-1 min-w-[74px] py-2.5 px-2 text-center text-[11px] font-semibold border-b-2 border-transparent whitespace-nowrap">Advanced</button>
+            <button type="button" data-section-btn="summary" data-mobile="true" class="flex-1 min-w-[74px] py-2.5 px-2 text-center text-[11px] font-semibold border-b-2 border-transparent whitespace-nowrap">Summary</button>
+        </div>
+    </header>
+
+    <!-- Main Presentation Stage -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col justify-center">
+
+        <!-- Section Progress Header -->
+        <div class="flex items-center justify-between gap-2 mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <div class="flex items-center space-x-2 min-w-0">
+                <span id="section-badge" class="px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 font-semibold uppercase tracking-wider text-[10px] shrink-0">Intro</span>
+                <span id="slide-counter" class="truncate">Intro • Slide 01 of 04</span>
+            </div>
+            <div class="w-28 sm:w-48 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden shrink-0">
+                <div id="progress-bar" class="bg-orange-500 h-full transition-all duration-300" style="width: 25%;"></div>
+            </div>
+        </div>
+
+        <!-- Slide Card -->
+        <div id="slide-card" data-palette="adaptive" data-template="classic" class="slide-card border rounded-2xl shadow-xl shadow-slate-300/40 dark:shadow-none p-6 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[470px]">
+
+            <!-- Decorative Architectural Layers (Pointer-Events Disabled) -->
+            <div class="ppt-decor" aria-hidden="true">
+                <!-- Urban Monochrome -->
+                <div class="ppt-layer ppt-urban">
+                    <div class="ppt-urban-pillar"></div>
+                    <div class="ppt-urban-hairline"></div>
+                    <div id="urban-watermark-num" class="ppt-urban-watermark">01</div>
+                </div>
+
+                <!-- Ion Boardroom -->
+                <div class="ppt-layer ppt-ion">
+                    <div class="ppt-ion-band"></div>
+                    <div class="ppt-ion-ribbon"></div>
+                </div>
+
+                <!-- Berlin Editorial -->
+                <div class="ppt-layer ppt-berlin">
+                    <div class="ppt-berlin-tab"></div>
+                    <div class="ppt-berlin-rule"></div>
+                </div>
+
+                <!-- Facet Geometric -->
+                <div class="ppt-layer ppt-facet">
+                    <svg class="absolute top-0 right-0 w-44 h-44 opacity-15" viewBox="0 0 200 200" fill="none">
+                        <polygon points="200,0 80,0 200,120" fill="var(--slide-accent)"/>
+                        <polygon points="200,0 140,0 200,180" fill="var(--slide-accent)" opacity="0.55"/>
+                        <polygon points="80,0 140,60 200,0" fill="var(--slide-title)" opacity="0.25"/>
+                    </svg>
+                    <svg class="absolute bottom-0 left-0 w-36 h-36 opacity-15" viewBox="0 0 200 200" fill="none">
+                        <polygon points="0,200 0,90 110,200" fill="var(--slide-accent)"/>
+                        <polygon points="0,200 0,145 165,200" fill="var(--slide-accent)" opacity="0.5"/>
+                    </svg>
+                </div>
+
+                <!-- Gallery Frame -->
+                <div class="ppt-layer ppt-gallery">
+                    <div class="ppt-gallery-frame"></div>
+                    <div class="ppt-gallery-tl"></div>
+                    <div class="ppt-gallery-br"></div>
+                </div>
+            </div>
+
+            <!-- Slide Card Top Action Bar -->
+            <div class="relative z-20 flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b" style="border-color: var(--slide-border);">
+                <div class="flex items-center space-x-2 min-w-0">
+                    <span class="slide-accent-pill px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide flex items-center space-x-1.5 max-w-full">
+                        <span class="w-2 h-2 rounded-full shrink-0" style="background-color: var(--slide-accent);"></span>
+                        <span id="active-design-summary" class="truncate">Intro: Classic Clean • Default Adaptive</span>
+                    </span>
+                </div>
+
+                <div class="flex items-center space-x-2 relative">
+                    <!-- Slide Design Button -->
+                    <button type="button" id="btn-toggle-design" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium border transition-all hover:opacity-90" style="border-color: var(--slide-border); color: var(--slide-title); background-color: var(--slide-accent-soft);">
+                        <svg class="w-4 h-4 slide-accent-color" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                        </svg>
+                        <span>Slide Design</span>
+                    </button>
+
+                    <!-- Edit Slide Button -->
+                    <button type="button" id="btn-toggle-edit" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium border transition-all hover:opacity-90" style="border-color: var(--slide-border); color: var(--slide-title);">
+                        <svg class="w-4 h-4 slide-accent-color" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span id="edit-btn-text">Edit Slide</span>
+                    </button>
+
+                    <!-- Slide Design Customizer Popover -->
+                    <div id="design-popover" class="hidden absolute right-0 top-11 w-[calc(100vw-3rem)] max-w-[420px] rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-2xl p-4 z-30">
+                        <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-200 dark:border-slate-800">
+                            <div>
+                                <h4 class="font-bold text-sm">Slide Designer &amp; Palettes</h4>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Section-scoped layouts &amp; high-contrast themes</p>
+                            </div>
+                            <button type="button" id="btn-close-design" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600" aria-label="Close Designer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Popover Sub-Tabs -->
+                        <div class="flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-3">
+                            <button type="button" id="tab-btn-templates" class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-orange-600 dark:text-orange-400 shadow-sm transition-all">
+                                Designer Templates
+                            </button>
+                            <button type="button" id="tab-btn-palettes" class="flex-1 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                                Color Palettes
+                            </button>
+                        </div>
+
+                        <!-- Tab 1: Designer Templates -->
+                        <div id="design-tab-templates" class="mb-3">
+                            <div id="template-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                            <!-- Recommended Pairing Banner -->
+                            <div class="mt-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate" id="pairing-title">Recommended Palette</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate" id="pairing-desc">Pairs cleanly with this template</p>
+                                </div>
+                                <button type="button" id="btn-apply-pairing" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 shrink-0 transition-opacity">
+                                    Apply Palette
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Color Palettes -->
+                        <div id="design-tab-palettes" class="hidden mb-3">
+                            <div id="palette-swatches" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+
+                        <!-- Section Scope Footer -->
+                        <div class="pt-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                            <span id="section-scope-badge" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-[11px] font-medium truncate">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0"></span>
+                                <span>Applied to all Intro slides</span>
+                            </span>
+                            <button type="button" id="btn-reset-section-design" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
+                                Reset Intro Design
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Mode Content -->
+            <div id="view-mode-content" class="relative z-10 flex-1 flex flex-col justify-between">
+                <div>
+                    <h2 id="slide-title" class="slide-title-text text-xl sm:text-3xl font-bold tracking-tight mb-2">01. Version Control Systems (VCS) &amp; Why Git Matters</h2>
+                    <p id="slide-subtitle" class="slide-subtitle-text text-sm sm:text-base mb-6 font-medium">Centralized vs. Distributed VCS, snapshot storage, and non-linear engineering workflows</p>
+
+                    <!-- Bullet Points -->
+                    <ul id="slide-bullets" class="slide-body-text space-y-3.5 mb-6 text-sm sm:text-base leading-relaxed"></ul>
+                </div>
+
+                <!-- Terminal Code Snippet Box -->
+                <div class="slide-code-box mt-4 border rounded-xl overflow-hidden shadow-inner">
+                    <div class="slide-code-head flex items-center justify-between px-4 py-2 border-b text-xs text-slate-300">
+                        <span class="font-mono flex items-center space-x-2">
+                            <svg class="w-3.5 h-3.5 slide-accent-color" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                            </svg>
+                            <span>Terminal / Reference</span>
+                        </span>
+                        <button type="button" id="btn-copy-code" class="hover:text-white transition-colors flex items-center space-x-1.5 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                            </svg>
+                            <span id="copy-text">Copy</span>
+                        </button>
+                    </div>
+                    <pre class="slide-code-content p-4 text-xs sm:text-sm overflow-x-auto"><code id="slide-code">git --version</code></pre>
+                </div>
+            </div>
+
+            <!-- Edit Mode Form -->
+            <div id="edit-mode-content" class="relative z-10 hidden flex-1 flex-col justify-between space-y-4">
+                <div class="space-y-3.5">
+                    <div class="flex items-center justify-between pb-1">
+                        <h3 class="font-semibold text-base slide-accent-color">Editing Slide Content</h3>
+                        <span class="text-xs slide-subtitle-text">Saved automatically to browser storage</span>
+                    </div>
+
+                    <div>
+                        <label for="input-title" class="block text-[11px] font-semibold uppercase tracking-wider slide-subtitle-text mb-1">Slide Title</label>
+                        <input type="text" id="input-title" class="w-full px-3.5 py-2 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+
+                    <div>
+                        <label for="input-subtitle" class="block text-[11px] font-semibold uppercase tracking-wider slide-subtitle-text mb-1">Subtitle / Description</label>
+                        <input type="text" id="input-subtitle" class="w-full px-3.5 py-2 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+
+                    <div>
+                        <label for="input-bullets" class="block text-[11px] font-semibold uppercase tracking-wider slide-subtitle-text mb-1">Bullet Points (One per line, wrap commands in backticks)</label>
+                        <textarea id="input-bullets" rows="4" class="w-full px-3.5 py-2 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="input-code" class="block text-[11px] font-semibold uppercase tracking-wider slide-subtitle-text mb-1">Terminal Code Snippet</label>
+                        <textarea id="input-code" rows="3" class="w-full font-mono px-3.5 py-2 rounded-xl bg-slate-950 text-emerald-400 border border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t" style="border-color: var(--slide-border);">
+                    <button type="button" id="btn-reset-slide-content" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-white/90 dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-800 hover:bg-rose-50 transition-colors">Reset Slide Content</button>
+                    <button type="button" id="btn-save-slide" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all">Save Changes</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Slide Navigation Controls -->
+        <div class="flex items-center justify-between mt-6">
+            <button type="button" id="prev-btn" class="flex items-center space-x-2 px-4 sm:px-5 py-2.5 rounded-xl font-medium text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span>Previous</span>
+            </button>
+
+            <!-- Quick Jump Slide Dots -->
+            <div id="slide-dots" class="flex items-center space-x-2"></div>
+
+            <button type="button" id="next-btn" class="flex items-center space-x-2 px-4 sm:px-5 py-2.5 rounded-xl font-medium text-sm bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-500/20">
+                <span>Next</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-3.5 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 px-4">
+        <p>Use <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-slate-700 dark:text-slate-300">←</kbd> and <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-slate-700 dark:text-slate-300">→</kbd> keys to navigate. Customize each section independently via <strong>Slide Design</strong>.</p>
+    </footer>
+
+    <!-- Custom Reset All Confirmation Modal -->
+    <div id="reset-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 id="reset-modal-title" class="text-lg font-bold text-slate-900 dark:text-white mb-2">Reset Presentation?</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">This will restore all 20 slides across Intro, Basics, Intermediate, Advanced, and Summary along with all section designs back to defaults.</p>
+            <div class="flex items-center justify-end space-x-3">
+                <button type="button" id="btn-cancel-reset" class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                <button type="button" id="btn-confirm-reset" class="px-4 py-2 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors">Reset Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center space-x-2 z-50">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+        <span id="toast-msg">Action completed</span>
+    </div>
+
+    <!-- Modular Vanilla JavaScript -->
+    <script>
+        (function () {
+            'use strict';
+
+            /* =====================================================================
+               1. CATALOGS & CURRICULUM DATA (The Complete Git Guide Curriculum)
+               ===================================================================== */
+            const STORAGE_KEY_DATA = 'complete_git_guide_deck_v2';
+            const STORAGE_KEY_SHELL = 'complete_git_guide_shell_theme_v2';
+
+            const SECTION_KEYS = ['intro', 'basics', 'intermediate', 'advanced', 'summary'];
+
+            const COLOR_PALETTES = [
+                { id: 'adaptive', name: 'Default Adaptive', swatchBg: 'linear-gradient(135deg, #ffffff 50%, #0f172a 50%)', accent: '#f97316', tag: 'Auto' },
+                { id: 'urban-noir', name: 'Urban Noir', swatchBg: '#141416', accent: '#f4f4f5', tag: 'Mono' },
+                { id: 'indigo', name: 'Midnight Indigo', swatchBg: '#0b1120', accent: '#38bdf8', tag: 'Dark' },
+                { id: 'emerald', name: 'Emerald Obsidian', swatchBg: '#070d0b', accent: '#10b981', tag: 'Dark' },
+                { id: 'crimson', name: 'Sunset Crimson', swatchBg: '#180e14', accent: '#fb7185', tag: 'Dark' },
+                { id: 'nordic', name: 'Nordic Paper', swatchBg: '#faf8f5', accent: '#1d4ed8', tag: 'Light' },
+                { id: 'mint', name: 'Mint Blueprint', swatchBg: '#f0fdf9', accent: '#0d9488', tag: 'Light' },
+                { id: 'amethyst', name: 'Royal Amethyst', swatchBg: '#130c24', accent: '#c084fc', tag: 'Dark' }
+            ];
+
+            const DESIGNER_TEMPLATES = [
+                {
+                    id: 'classic',
+                    name: 'Classic Clean',
+                    subtitle: 'Minimalist modern canvas',
+                    recommendedPalette: 'adaptive',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 shrink-0">
+                        <rect x="8" y="10" width="28" height="3.5" rx="1.5" fill="currentColor" class="text-orange-500"/>
+                        <rect x="8" y="17" width="46" height="2" rx="1" fill="currentColor" class="text-slate-300 dark:text-slate-600"/>
+                        <rect x="8" y="22" width="38" height="2" rx="1" fill="currentColor" class="text-slate-300 dark:text-slate-600"/>
+                    </svg>`
+                },
+                {
+                    id: 'urban',
+                    name: 'Urban Monochrome',
+                    subtitle: 'Left pillar & watermark',
+                    recommendedPalette: 'urban-noir',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-zinc-900 shrink-0">
+                        <rect x="0" y="0" width="7" height="40" fill="#f4f4f5"/>
+                        <rect x="9" y="0" width="1.5" height="40" fill="#71717a"/>
+                        <text x="43" y="21" font-size="13" font-weight="bold" fill="#3f3f46">01</text>
+                        <rect x="15" y="11" width="24" height="3" rx="1" fill="#ffffff"/>
+                        <rect x="15" y="18" width="34" height="2" rx="1" fill="#a1a1aa"/>
+                    </svg>`
+                },
+                {
+                    id: 'ion',
+                    name: 'Ion Boardroom',
+                    subtitle: 'Executive header band',
+                    recommendedPalette: 'indigo',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-slate-900 shrink-0">
+                        <rect x="0" y="0" width="64" height="15" fill="#1e3a8a"/>
+                        <rect x="0" y="0" width="64" height="3" fill="#38bdf8"/>
+                        <line x1="0" y1="15" x2="64" y2="15" stroke="#38bdf8" stroke-width="1.2"/>
+                        <rect x="8" y="6" width="28" height="3" rx="1" fill="#f8fafc"/>
+                        <rect x="8" y="21" width="44" height="2" rx="1" fill="#93c5fd"/>
+                    </svg>`
+                },
+                {
+                    id: 'berlin',
+                    name: 'Berlin Editorial',
+                    subtitle: 'Top tab & margin rule',
+                    recommendedPalette: 'nordic',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-[#faf8f5] shrink-0">
+                        <rect x="10" y="0" width="16" height="4" fill="#1d4ed8"/>
+                        <line x1="10" y1="10" x2="10" y2="34" stroke="#93c5fd" stroke-width="1.5"/>
+                        <rect x="15" y="11" width="28" height="3" rx="1" fill="#0f172a"/>
+                        <rect x="15" y="18" width="36" height="2" rx="1" fill="#64748b"/>
+                    </svg>`
+                },
+                {
+                    id: 'facet',
+                    name: 'Facet Geometric',
+                    subtitle: 'Corner poly accents',
+                    recommendedPalette: 'emerald',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-[#070d0b] shrink-0">
+                        <polygon points="64,0 44,0 64,20" fill="#10b981" opacity="0.8"/>
+                        <polygon points="0,40 0,24 16,40" fill="#10b981" opacity="0.6"/>
+                        <rect x="8" y="11" width="26" height="3" rx="1" fill="#ecfdf5"/>
+                        <rect x="8" y="18" width="36" height="2" rx="1" fill="#6ee7b7"/>
+                    </svg>`
+                },
+                {
+                    id: 'gallery',
+                    name: 'Gallery Frame',
+                    subtitle: 'Double-line corner frame',
+                    recommendedPalette: 'amethyst',
+                    previewSvg: `<svg viewBox="0 0 64 40" class="w-12 h-8 rounded border border-slate-300 dark:border-slate-600 bg-[#130c24] shrink-0">
+                        <rect x="4" y="4" width="56" height="32" rx="2" fill="none" stroke="#c084fc" stroke-width="0.8" opacity="0.5"/>
+                        <polyline points="4,10 4,4 10,4" fill="none" stroke="#c084fc" stroke-width="1.8"/>
+                        <polyline points="54,36 60,36 60,30" fill="none" stroke="#c084fc" stroke-width="1.8"/>
+                        <rect x="10" y="12" width="28" height="3" rx="1" fill="#faf5ff"/>
+                    </svg>`
+                }
+            ];
+
+            const DEFAULT_SLIDES = {
+                intro: [
+                    {
+                        title: "01. Version Control Systems (VCS) & Why Git Matters",
+                        subtitle: "Centralized vs. Distributed VCS, snapshot storage, and non-linear engineering workflows",
+                        bullets: [
+                            "Centralized VCS (SVN) relies on a single server, whereas Distributed VCS (Git) gives every developer a full repository mirror.",
+                            "Unlike legacy tools that store file deltas, Git stores compressed project snapshots linked in a directed acyclic graph.",
+                            "Enables instant offline commits, fearless parallel branching, and cryptographic integrity across entire codebases."
+                        ],
+                        code: "# Verify Git installation and inspect available help topics\ngit --version\ngit help -a"
+                    },
+                    {
+                        title: "02. How Git Works Under the Hood",
+                        subtitle: "Working Directory, Staging Area (Index), Local Repository (.git), and SHA-1 objects",
+                        bullets: [
+                            "The Working Directory holds your checked-out files; the Staging Area (`index`) prepares exact changes for the next commit.",
+                            "The Local Repository (`.git/objects`) stores immutable `blob` (file content), `tree` (directory), and `commit` objects.",
+                            "Every object is addressed by a 40-character SHA-1 hash—if even one bit changes, its hash changes completely."
+                        ],
+                        code: "# Inspect internal Git object types and contents\ngit cat-file -t HEAD\ngit cat-file -p HEAD"
+                    },
+                    {
+                        title: "03. Git vs. GitHub — Local Engine vs. Cloud Platform",
+                        subtitle: "Understanding where local version control ends and cloud collaboration begins",
+                        bullets: [
+                            "Git is the free, open-source command-line engine installed locally on your machine to track code history.",
+                            "GitHub is a cloud hosting platform built around Git that adds Pull Requests, Issues, Code Reviews, and GitHub Actions CI/CD.",
+                            "You push local Git commits to remote GitHub repositories so teammates can review, discuss, and merge changes safely."
+                        ],
+                        code: "# Connect a local Git repository to a remote GitHub host\ngit remote add origin https://github.com/username/repo.git\ngit remote -v"
+                    },
+                    {
+                        title: "04. Installing & Configuring Git Identity",
+                        subtitle: "Setting global author metadata, default branch names, and preferred editor",
+                        bullets: [
+                            "Git embeds your `user.name` and `user.email` permanently into every commit snapshot you create.",
+                            "Configuration spans three cascading levels: `--system` (machine), `--global` (user `~/.gitconfig`), and `--local` (`.git/config`).",
+                            "Standardize new repositories with `init.defaultBranch main` and verify settings anytime using `git config --list`."
+                        ],
+                        code: "git config --global user.name \"Bogdan Stashchuk\"\ngit config --global user.email \"bogdan@example.com\"\ngit config --global init.defaultBranch main\ngit config --list --show-origin"
+                    }
+                ],
+                basics: [
+                    {
+                        title: "01. Initializing Repositories & Checking Status",
+                        subtitle: "Creating .git anatomy and distinguishing untracked, modified, and staged files",
+                        bullets: [
+                            "Run `git init` inside a project folder to create the hidden `.git` directory containing `HEAD`, `objects/`, and `refs/`.",
+                            "Files in your working folder are either Untracked (new to Git) or Tracked (Unmodified, Modified, or Staged).",
+                            "Use `git status` for detailed guidance or `git status -s` for a compact two-column status summary."
+                        ],
+                        code: "mkdir git-course && cd git-course\ngit init\necho \"# Project\" > README.md\ngit status -s"
+                    },
+                    {
+                        title: "02. Staging Changes & Creating Atomic Commits",
+                        subtitle: "Promoting edits through the staging index and writing clear imperative commit messages",
+                        bullets: [
+                            "Stage specific files with `git add <file>` or stage all modifications and new files via `git add .`.",
+                            "Record a permanent snapshot with `git commit -m \"Add project README\"` using short, imperative subject lines.",
+                            "Use `git commit -am \"msg\"` as a shortcut to stage and commit already-tracked modified files in one step."
+                        ],
+                        code: "git add README.md\ngit commit -m \"Add initial project README\"\ngit commit -am \"Update README setup instructions\""
+                    },
+                    {
+                        title: "03. Inspecting Commit History & Diffs",
+                        subtitle: "Navigating repository logs and comparing Working Tree vs. Staging Area changes",
+                        bullets: [
+                            "Browse commit logs with `git log` or visualize branches compactly via `git log --oneline --graph --all`.",
+                            "Inspect the metadata and exact patch of any commit using `git show <commit-hash>`.",
+                            "Run `git diff` to see unstaged working edits, and `git diff --staged` to review changes queued for your next commit."
+                        ],
+                        code: "git log --oneline --graph --all\ngit show HEAD\ngit diff\ngit diff --staged"
+                    },
+                    {
+                        title: "04. Ignoring Files & Removing/Renaming",
+                        subtitle: "Filtering build artifacts with .gitignore and tracking file deletions or moves",
+                        bullets: [
+                            "List patterns like `node_modules/`, `.env`, and `*.log` inside `.gitignore` so Git never tracks secrets or build outputs.",
+                            "Remove a file from both disk and Git with `git rm <file>`, or untrack an accidentally committed file via `git rm --cached <file>`.",
+                            "Rename or move tracked files cleanly with `git mv old.js new.js` so Git preserves full file history."
+                        ],
+                        code: "echo -e \"node_modules/\\n.env\" >> .gitignore\ngit rm --cached .env\ngit mv app.js index.js\ngit commit -m \"Configure .gitignore and rename entry file\""
+                    }
+                ],
+                intermediate: [
+                    {
+                        title: "01. Branching Fundamentals & HEAD Pointer",
+                        subtitle: "Lightweight branch pointers, switching contexts, and understanding detached HEAD",
+                        bullets: [
+                            "A Git branch is simply a 41-byte file containing the SHA-1 hash of the commit it currently points to.",
+                            "`HEAD` is a symbolic pointer indicating your active branch; checking out a raw commit hash puts you in `detached HEAD` state.",
+                            "List branches with `git branch` and create + switch in one command using `git switch -c feature/login`."
+                        ],
+                        code: "git branch -a\ngit switch -c feature/login\n# Or legacy equivalent: git checkout -b feature/login\ngit log --oneline --decorate"
+                    },
+                    {
+                        title: "02. Merging Strategies & Fast-Forward vs. 3-Way Merge",
+                        subtitle: "Integrating diverged histories cleanly without losing feature context",
+                        bullets: [
+                            "If the target branch has no new commits since branching, Git performs a `Fast-Forward` merge by simply moving the pointer forward.",
+                            "When both branches have new commits, Git creates a `3-Way Merge` commit combining both histories with two parent pointers.",
+                            "Pass `--no-ff` to force an explicit merge commit even when fast-forwarding is possible, preserving feature boundaries."
+                        ],
+                        code: "git switch main\ngit merge feature/login\n# Preserve feature branch grouping:\ngit merge --no-ff feature/login -m \"Merge feature/login\""
+                    },
+                    {
+                        title: "03. Resolving Merge Conflicts Confidently",
+                        subtitle: "Diagnosing overlapping line edits and completing or aborting interrupted merges",
+                        bullets: [
+                            "Conflicts arise when two branches alter the exact same lines or one branch deletes a file modified by the other.",
+                            "Open conflicted files, resolve sections between `<<<<<<< HEAD`, `=======`, and `>>>>>>> branch`, and remove the markers.",
+                            "Stage the resolved file with `git add` and run `git commit` to finish—or cancel anytime via `git merge --abort`."
+                        ],
+                        code: "git status\n# Resolve <<<<<<< HEAD ... ======= ... >>>>>>> markers\ngit add src/config.js\ngit commit\n# To cancel mid-merge: git merge --abort"
+                    },
+                    {
+                        title: "04. Working with Remote Repositories & GitHub",
+                        subtitle: "Cloning, pushing upstream branches, fetch vs. pull, and Fork & Pull Request workflows",
+                        bullets: [
+                            "Download a complete remote repo with `git clone <url>` and publish local branches via `git push -u origin <branch>`.",
+                            "`git fetch` downloads remote commits into `origin/*` tracking branches safely; `git pull` runs `fetch` followed by `merge`.",
+                            "Contribute to open-source or team repos by forking on GitHub, pushing to a feature branch, and opening a Pull Request."
+                        ],
+                        code: "git clone https://github.com/org/app.git\ngit push -u origin feature/login\ngit fetch origin\ngit pull --rebase origin main"
+                    }
+                ],
+                advanced: [
+                    {
+                        title: "01. Undoing Changes Safely",
+                        subtitle: "Mastering git restore, soft/mixed/hard reset, and public-safe git revert",
+                        bullets: [
+                            "Discard working directory edits with `git restore <file>` or unstage files via `git restore --staged <file>`.",
+                            "`git reset` moves `HEAD`: `--soft` keeps changes staged, `--mixed` (default) unstages them, and `--hard` discards everything.",
+                            "Never `reset` shared public commits—use `git revert <hash>` to record a brand-new commit that safely undoes earlier changes."
+                        ],
+                        code: "git restore --staged index.js\ngit reset --soft HEAD~1\n# Public-safe undo on main:\ngit revert 7a3f9c1"
+                    },
+                    {
+                        title: "02. Interactive Rebase & Clean Commit History",
+                        subtitle: "Replaying commits onto updated bases and squashing WIP noise before PR review",
+                        bullets: [
+                            "`git rebase main` lifts your feature commits and replays them sequentially on top of the latest `main` commit.",
+                            "Run `git rebase -i HEAD~4` to `pick`, `reword` messages, `squash`/`fixup` noisy commits, or `drop` unwanted ones.",
+                            "Golden Rule of Rebasing: Never rebase commits that have already been pushed to shared public branches."
+                        ],
+                        code: "git fetch origin\ngit rebase -i HEAD~3\n# Update remote feature branch safely after rebase:\ngit push --force-with-lease origin feature/login"
+                    },
+                    {
+                        title: "03. Stashing Work-in-Progress & Tagging Releases",
+                        subtitle: "Shelving dirty working trees with git stash and marking semantic release versions",
+                        bullets: [
+                            "Save uncommitted edits onto a stack with `git stash push -m \"wip: auth\"` so you can switch branches cleanly.",
+                            "Inspect stashes via `git stash list`, restore and remove with `git stash pop`, or keep in stack using `git stash apply`.",
+                            "Mark release milestones with annotated tags (`git tag -a v1.0.0 -m \"Release 1.0\"`) and push via `git push origin --tags`."
+                        ],
+                        code: "git stash push -u -m \"wip: profile form\"\ngit stash list && git stash pop\ngit tag -a v1.0.0 -m \"Production release v1.0.0\"\ngit push origin v1.0.0"
+                    },
+                    {
+                        title: "04. Time Travel & Disaster Recovery with Reflog",
+                        subtitle: "Recovering lost commits after hard resets, cherry-picking, and bisect debugging",
+                        bullets: [
+                            "`git reflog` records every local movement of `HEAD` for 30+ days—allowing recovery of 'lost' commits or deleted branches.",
+                            "Copy a single targeted commit onto your current branch without merging everything via `git cherry-pick <hash>`.",
+                            "Use `git bisect` binary search (`start`, `bad`, `good`) to pinpoint the exact commit that introduced a bug."
+                        ],
+                        code: "git reflog\ngit switch -c recovered-branch HEAD@{2}\ngit cherry-pick 4c8e1d9\ngit bisect start && git bisect bad && git bisect good v1.0.0"
+                    }
+                ],
+                summary: [
+                    {
+                        title: "01. Daily Solo Developer Workflow Cheat Sheet",
+                        subtitle: "A repeatable, clean 5-step routine for everyday feature development",
+                        bullets: [
+                            "1. Sync local `main` before starting work (`git switch main && git pull`) so you always branch from fresh code.",
+                            "2. Isolate every task on a descriptive branch (`git switch -c feat/user-settings` or `fix/login-timeout`).",
+                            "3. Review diffs (`git status`, `git diff`), make small atomic commits, and push (`git push -u origin HEAD`) to open a PR."
+                        ],
+                        code: "git switch main && git pull\ngit switch -c feat/user-settings\ngit add -p && git commit -m \"Add user settings form\"\ngit push -u origin feat/user-settings"
+                    },
+                    {
+                        title: "02. Team Collaboration & Pull Request Best Practices",
+                        subtitle: "Keeping Pull Requests small, reviewable, and conflict-free across engineering teams",
+                        bullets: [
+                            "Keep PRs focused on a single concern (<300 lines changed) with clear descriptions, screenshots, and test notes.",
+                            "Rebase or merge `origin/main` into your feature branch regularly to catch conflicts early on your machine.",
+                            "Protect `main` on GitHub with required CI checks, peer approvals, and `Squash and merge` for a linear history."
+                        ],
+                        code: "git fetch origin\ngit rebase origin/main\ngit push --force-with-lease\ngh pr create --fill"
+                    },
+                    {
+                        title: "03. Top 10 Essential Git Commands Every Developer Uses Daily",
+                        subtitle: "High-frequency commands and flags that cover 95% of real-world Git operations",
+                        bullets: [
+                            "Inspect & Stage: `git status -s`, `git diff`, `git add -p`, and `git commit -m \"...\"`.",
+                            "Branch & Sync: `git switch -c <branch>`, `git fetch --prune`, `git pull --rebase`, and `git push -u origin <branch>`.",
+                            "History & Rescue: `git log --oneline --graph --all`, `git stash push -m \"...\"`, `git restore`, and `git reflog`."
+                        ],
+                        code: "git status -s && git diff\ngit log --oneline --graph --all -n 10\ngit fetch --prune && git pull --rebase"
+                    },
+                    {
+                        title: "04. Emergency Troubleshooting Quick Guide",
+                        subtitle: "Instant fixes for the four most common Git mistakes developers make",
+                        bullets: [
+                            "Typo in last commit message or forgot a file? Stage the file and run `git commit --amend` (before pushing).",
+                            "Committed to `main` by mistake? Create your feature branch (`git branch feat/new`), then `git reset --hard origin/main`.",
+                            "Broke your working directory? Run `git restore .`—or if you hard-reset a commit, find its hash in `git reflog` and `git reset --hard <hash>`."
+                        ],
+                        code: "# 1. Fix last unpushed commit:\ngit add forgotten.js && git commit --amend --no-edit\n# 2. Move accidental main commits to a new branch:\ngit branch feat/saved && git reset --hard origin/main"
+                    }
+                ]
+            };
+
+            const DEFAULT_SECTION_DESIGNS = {
+                intro: { template: 'classic', palette: 'adaptive' },
+                basics: { template: 'classic', palette: 'adaptive' },
+                intermediate: { template: 'classic', palette: 'adaptive' },
+                advanced: { template: 'classic', palette: 'adaptive' },
+                summary: { template: 'classic', palette: 'adaptive' }
+            };
+
+            /* =====================================================================
+               2. APPLICATION STATE & SAFE PERSISTENCE
+               ===================================================================== */
+            const state = {
+                section: 'intro',
+                slideIndex: 0,
+                isEditMode: false,
+                isDesignOpen: false,
+                designTab: 'templates',
+                slides: cloneDeep(DEFAULT_SLIDES),
+                sectionDesigns: cloneDeep(DEFAULT_SECTION_DESIGNS)
+            };
+
+            let toastTimer = null;
+
+            function cloneDeep(obj) {
+                return JSON.parse(JSON.stringify(obj));
+            }
+
+            function formatSectionTitle(sectionKey) {
+                return sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
+            }
+
+            function getTemplateMeta(templateId) {
+                return DESIGNER_TEMPLATES.find(t => t.id === templateId) || DESIGNER_TEMPLATES[0];
+            }
+
+            function getPaletteMeta(paletteId) {
+                return COLOR_PALETTES.find(p => p.id === paletteId) || COLOR_PALETTES[0];
+            }
+
+            function loadPersistedState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY_DATA);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === 'object') {
+                            SECTION_KEYS.forEach(sec => {
+                                if (Array.isArray(parsed.slides?.[sec]) && parsed.slides[sec].length > 0) {
+                                    state.slides[sec] = parsed.slides[sec];
+                                }
+                                if (parsed.sectionDesigns?.[sec]) {
+                                    const tpl = parsed.sectionDesigns[sec].template;
+                                    const pal = parsed.sectionDesigns[sec].palette;
+                                    state.sectionDesigns[sec] = {
+                                        template: DESIGNER_TEMPLATES.some(t => t.id === tpl) ? tpl : 'classic',
+                                        palette: COLOR_PALETTES.some(p => p.id === pal) ? pal : 'adaptive'
+                                    };
+                                }
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Resetting corrupted presentation storage:', err);
+                    localStorage.removeItem(STORAGE_KEY_DATA);
+                }
+
+                try {
+                    const savedShellTheme = localStorage.getItem(STORAGE_KEY_SHELL);
+                    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (savedShellTheme === 'dark' || (!savedShellTheme && prefersDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (err) {
+                    console.warn('Theme storage unavailable:', err);
+                }
+            }
+
+            function persistState() {
+                try {
+                    localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify({
+                        slides: state.slides,
+                        sectionDesigns: state.sectionDesigns
+                    }));
+                } catch (err) {
+                    console.warn('Unable to save presentation state:', err);
+                }
+            }
+
+            /* =====================================================================
+               3. RENDERING PIPELINE
+               ===================================================================== */
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function renderInlineCode(rawText) {
+                const safe = escapeHtml(rawText);
+                return safe.replace(
+                    /`([^`]+)`/g,
+                    '<code class="px-1.5 py-0.5 rounded text-xs font-mono font-medium" style="background-color: var(--slide-accent-soft); color: var(--slide-accent);">$1</code>'
+                );
+            }
+
+            function renderNavbarTabs() {
+                document.querySelectorAll('[data-section-btn]').forEach(btn => {
+                    const btnSec = btn.getAttribute('data-section-btn');
+                    const isMobile = btn.getAttribute('data-mobile') === 'true';
+                    const isActive = btnSec === state.section;
+
+                    if (isMobile) {
+                        btn.className = isActive
+                            ? 'flex-1 min-w-[68px] py-2.5 px-2 text-center text-[11px] font-semibold text-orange-600 dark:text-orange-400 border-b-2 border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 whitespace-nowrap'
+                            : 'flex-1 min-w-[68px] py-2.5 px-2 text-center text-[11px] font-semibold text-slate-600 dark:text-slate-400 border-b-2 border-transparent whitespace-nowrap';
+                    } else {
+                        btn.className = isActive
+                            ? 'px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-semibold bg-white dark:bg-slate-900 shadow-sm text-orange-600 dark:text-orange-400 transition-all'
+                            : 'px-3 lg:px-3.5 py-1.5 rounded-lg text-xs lg:text-sm font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+                    }
+                });
+            }
+
+            function renderDesignerPopover() {
+                const sec = state.section;
+                const secLabel = formatSectionTitle(sec);
+                const design = state.sectionDesigns[sec];
+                const activeTpl = getTemplateMeta(design.template);
+                const recPalette = getPaletteMeta(activeTpl.recommendedPalette);
+
+                const templateContainer = document.getElementById('template-options');
+                if (templateContainer) {
+                    templateContainer.innerHTML = DESIGNER_TEMPLATES.map(tpl => {
+                        const selected = tpl.id === design.template;
+                        return `
+                            <button type="button" data-select-template="${tpl.id}" class="flex items-center space-x-2.5 p-2 rounded-xl border text-left transition-all ${selected ? 'border-orange-500 ring-2 ring-orange-500/25 bg-orange-50/50 dark:bg-orange-950/30' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}">
+                                ${tpl.previewSvg}
+                                <div class="min-w-0">
+                                    <div class="text-xs font-semibold truncate">${tpl.name}</div>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${tpl.subtitle}</div>
+                                </div>
+                            </button>
+                        `;
+                    }).join('');
+                }
+
+                const pairingTitle = document.getElementById('pairing-title');
+                const pairingDesc = document.getElementById('pairing-desc');
+                if (pairingTitle) pairingTitle.textContent = `${activeTpl.name} + ${recPalette.name}`;
+                if (pairingDesc) pairingDesc.textContent = `Signature pairing for ${secLabel} slides`;
+
+                const paletteContainer = document.getElementById('palette-swatches');
+                if (paletteContainer) {
+                    paletteContainer.innerHTML = COLOR_PALETTES.map(pal => {
+                        const selected = pal.id === design.palette;
+                        return `
+                            <button type="button" data-select-palette="${pal.id}" class="flex items-center justify-between p-2 rounded-xl border text-left transition-all ${selected ? 'border-orange-500 ring-2 ring-orange-500/25 bg-orange-50/50 dark:bg-orange-950/30' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}">
+                                <div class="flex items-center space-x-2 min-w-0">
+                                    <span class="w-5 h-5 rounded-full shrink-0 border border-slate-300 dark:border-slate-600 flex items-center justify-center" style="background: ${pal.swatchBg};">
+                                        <span class="w-2 h-2 rounded-full" style="background-color: ${pal.accent};"></span>
+                                    </span>
+                                    <span class="text-xs font-medium truncate">${pal.name}</span>
+                                </div>
+                                <span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">${pal.tag}</span>
+                            </button>
+                        `;
+                    }).join('');
+                }
+
+                const scopeBadge = document.getElementById('section-scope-badge');
+                if (scopeBadge) {
+                    scopeBadge.innerHTML = `
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0"></span>
+                        <span class="truncate">Applied to all ${secLabel} slides</span>
+                    `;
+                }
+
+                const resetSecBtn = document.getElementById('btn-reset-section-design');
+                if (resetSecBtn) {
+                    resetSecBtn.textContent = `Reset ${secLabel} Design`;
+                }
+            }
+
+            function renderSlide() {
+                const sec = state.section;
+                const secSlides = state.slides[sec];
+                if (state.slideIndex >= secSlides.length) state.slideIndex = 0;
+                if (state.slideIndex < 0) state.slideIndex = 0;
+
+                const slide = secSlides[state.slideIndex];
+                const total = secSlides.length;
+                const design = state.sectionDesigns[sec];
+                const secLabel = formatSectionTitle(sec);
+                const paddedCurrent = String(state.slideIndex + 1).padStart(2, '0');
+                const paddedTotal = String(total).padStart(2, '0');
+
+                // Apply Section-Scoped Design Tokens
+                const card = document.getElementById('slide-card');
+                if (card) {
+                    card.setAttribute('data-template', design.template);
+                    card.setAttribute('data-palette', design.palette);
+                }
+
+                const summary = document.getElementById('active-design-summary');
+                if (summary) {
+                    summary.textContent = `${secLabel}: ${getTemplateMeta(design.template).name} • ${getPaletteMeta(design.palette).name}`;
+                }
+
+                // Update Section-Scoped Sequential Watermark (01, 02, 03, 04 per section)
+                const watermark = document.getElementById('urban-watermark-num');
+                if (watermark) {
+                    watermark.textContent = paddedCurrent;
+                }
+
+                // Update Top Progress & Counter
+                const badge = document.getElementById('section-badge');
+                const counter = document.getElementById('slide-counter');
+                const progress = document.getElementById('progress-bar');
+                if (badge) badge.textContent = sec;
+                if (counter) counter.textContent = `${secLabel} • Slide ${paddedCurrent} of ${paddedTotal}`;
+                if (progress) progress.style.width = `${((state.slideIndex + 1) / total) * 100}%`;
+
+                // Update Slide Content
+                const titleEl = document.getElementById('slide-title');
+                const subEl = document.getElementById('slide-subtitle');
+                const bulletsEl = document.getElementById('slide-bullets');
+                const codeEl = document.getElementById('slide-code');
+
+                if (titleEl) titleEl.textContent = slide.title;
+                if (subEl) subEl.textContent = slide.subtitle;
+                if (bulletsEl) {
+                    bulletsEl.innerHTML = slide.bullets.map(bullet => `
+                        <li class="flex items-start space-x-3">
+                            <svg class="w-5 h-5 slide-accent-color mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>${renderInlineCode(bullet)}</span>
+                        </li>
+                    `).join('');
+                }
+                if (codeEl) codeEl.textContent = slide.code;
+
+                // Update Navigation Dots
+                const dotsContainer = document.getElementById('slide-dots');
+                if (dotsContainer) {
+                    dotsContainer.innerHTML = secSlides.map((_, idx) => {
+                        const active = idx === state.slideIndex;
+                        return `<button type="button" data-dot-index="${idx}" aria-label="Go to slide ${idx + 1}" class="h-2.5 rounded-full transition-all ${active ? 'bg-orange-500 w-6' : 'w-2.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}"></button>`;
+                    }).join('');
+                }
+
+                // Update Prev/Next Button States
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                if (prevBtn) prevBtn.disabled = state.slideIndex === 0;
+                if (nextBtn) nextBtn.disabled = state.slideIndex === total - 1;
+
+                if (state.isEditMode) {
+                    populateEditForm(slide);
+                }
+
+                renderNavbarTabs();
+                if (state.isDesignOpen) {
+                    renderDesignerPopover();
+                }
+            }
+
+            /* =====================================================================
+               4. INTERACTION HANDLERS
+               ===================================================================== */
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                const msgEl = document.getElementById('toast-msg');
+                if (!toast || !msgEl) return;
+
+                msgEl.textContent = message;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 2600);
+            }
+
+            function setDesignPopoverOpen(open) {
+                state.isDesignOpen = open;
+                const popover = document.getElementById('design-popover');
+                if (!popover) return;
+                if (open) {
+                    popover.classList.remove('hidden');
+                    renderDesignerPopover();
+                } else {
+                    popover.classList.add('hidden');
+                }
+            }
+
+            function setDesignTab(tabName) {
+                state.designTab = tabName;
+                const tplPanel = document.getElementById('design-tab-templates');
+                const palPanel = document.getElementById('design-tab-palettes');
+                const tplBtn = document.getElementById('tab-btn-templates');
+                const palBtn = document.getElementById('tab-btn-palettes');
+
+                if (!tplPanel || !palPanel || !tplBtn || !palBtn) return;
+
+                if (tabName === 'templates') {
+                    tplPanel.classList.remove('hidden');
+                    palPanel.classList.add('hidden');
+                    tplBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-orange-600 dark:text-orange-400 shadow-sm transition-all';
+                    palBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+                } else {
+                    palPanel.classList.remove('hidden');
+                    tplPanel.classList.add('hidden');
+                    palBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-orange-600 dark:text-orange-400 shadow-sm transition-all';
+                    tplBtn.className = 'flex-1 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+                }
+            }
+
+            function populateEditForm(slide) {
+                const titleInput = document.getElementById('input-title');
+                const subInput = document.getElementById('input-subtitle');
+                const bulletsInput = document.getElementById('input-bullets');
+                const codeInput = document.getElementById('input-code');
+
+                if (titleInput) titleInput.value = slide.title;
+                if (subInput) subInput.value = slide.subtitle;
+                if (bulletsInput) bulletsInput.value = slide.bullets.join('\n');
+                if (codeInput) codeInput.value = slide.code;
+            }
+
+            function setEditMode(enabled) {
+                state.isEditMode = enabled;
+                if (enabled) setDesignPopoverOpen(false);
+
+                const viewEl = document.getElementById('view-mode-content');
+                const editEl = document.getElementById('edit-mode-content');
+                const btnText = document.getElementById('edit-btn-text');
+
+                if (!viewEl || !editEl || !btnText) return;
+
+                if (enabled) {
+                    viewEl.classList.add('hidden');
+                    editEl.classList.remove('hidden');
+                    editEl.classList.add('flex');
+                    btnText.textContent = 'Exit Edit';
+                    populateEditForm(state.slides[state.section][state.slideIndex]);
+                } else {
+                    editEl.classList.add('hidden');
+                    editEl.classList.remove('flex');
+                    viewEl.classList.remove('hidden');
+                    btnText.textContent = 'Edit Slide';
+                }
+            }
+
+            function switchSection(sectionKey) {
+                if (!DEFAULT_SLIDES[sectionKey]) return;
+                state.section = sectionKey;
+                state.slideIndex = 0;
+                if (state.isEditMode) setEditMode(false);
+                setDesignPopoverOpen(false);
+                renderSlide();
+            }
+
+            function goPrevSlide() {
+                if (state.slideIndex > 0) {
+                    state.slideIndex -= 1;
+                    setDesignPopoverOpen(false);
+                    renderSlide();
+                }
+            }
+
+            function goNextSlide() {
+                const max = state.slides[state.section].length;
+                if (state.slideIndex < max - 1) {
+                    state.slideIndex += 1;
+                    setDesignPopoverOpen(false);
+                    renderSlide();
+                }
+            }
+
+            function copyCurrentCode() {
+                const codeText = state.slides[state.section][state.slideIndex].code;
+                const copySpan = document.getElementById('copy-text');
+
+                const textarea = document.createElement('textarea');
+                textarea.value = codeText;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.warn('Copy command fallback failed:', err);
+                }
+                document.body.removeChild(textarea);
+
+                if (copySpan) {
+                    copySpan.textContent = 'Copied!';
+                    setTimeout(() => { copySpan.textContent = 'Copy'; }, 1800);
+                }
+                showToast('Command copied to clipboard!');
+            }
+
+            /* =====================================================================
+               5. EVENT LISTENERS & DELEGATION
+               ===================================================================== */
+            function bindEvents() {
+                // Section navigation buttons (Desktop + Mobile)
+                document.querySelectorAll('[data-section-btn]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchSection(btn.getAttribute('data-section-btn'));
+                    });
+                });
+
+                // Global App Dark/Light Shell Toggle
+                const shellThemeBtn = document.getElementById('btn-toggle-shell-theme');
+                if (shellThemeBtn) {
+                    shellThemeBtn.addEventListener('click', () => {
+                        const isDark = document.documentElement.classList.toggle('dark');
+                        try {
+                            localStorage.setItem(STORAGE_KEY_SHELL, isDark ? 'dark' : 'light');
+                        } catch (err) {
+                            console.warn('Could not persist shell theme:', err);
+                        }
+                    });
+                }
+
+                // Slide Design Popover Toggles & Sub-Tabs
+                const designBtn = document.getElementById('btn-toggle-design');
+                const closeDesignBtn = document.getElementById('btn-close-design');
+                const tabTplBtn = document.getElementById('tab-btn-templates');
+                const tabPalBtn = document.getElementById('tab-btn-palettes');
+
+                if (designBtn) {
+                    designBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        setDesignPopoverOpen(!state.isDesignOpen);
+                    });
+                }
+                if (closeDesignBtn) {
+                    closeDesignBtn.addEventListener('click', () => setDesignPopoverOpen(false));
+                }
+                if (tabTplBtn) {
+                    tabTplBtn.addEventListener('click', () => setDesignTab('templates'));
+                }
+                if (tabPalBtn) {
+                    tabPalBtn.addEventListener('click', () => setDesignTab('palettes'));
+                }
+
+                // Event Delegation inside Designer Popover
+                const popover = document.getElementById('design-popover');
+                if (popover) {
+                    popover.addEventListener('click', (e) => {
+                        const tplBtn = e.target.closest('[data-select-template]');
+                        if (tplBtn) {
+                            const tplId = tplBtn.getAttribute('data-select-template');
+                            state.sectionDesigns[state.section].template = tplId;
+                            persistState();
+                            renderSlide();
+                            showToast(`${formatSectionTitle(state.section)} template: ${getTemplateMeta(tplId).name}`);
+                            return;
+                        }
+
+                        const palBtn = e.target.closest('[data-select-palette]');
+                        if (palBtn) {
+                            const palId = palBtn.getAttribute('data-select-palette');
+                            state.sectionDesigns[state.section].palette = palId;
+                            persistState();
+                            renderSlide();
+                            showToast(`${formatSectionTitle(state.section)} palette: ${getPaletteMeta(palId).name}`);
+                        }
+                    });
+                }
+
+                // Recommended Palette Pairing Button
+                const applyPairBtn = document.getElementById('btn-apply-pairing');
+                if (applyPairBtn) {
+                    applyPairBtn.addEventListener('click', () => {
+                        const currentTpl = getTemplateMeta(state.sectionDesigns[state.section].template);
+                        state.sectionDesigns[state.section].palette = currentTpl.recommendedPalette;
+                        persistState();
+                        renderSlide();
+                        showToast(`Applied ${getPaletteMeta(currentTpl.recommendedPalette).name} to all ${formatSectionTitle(state.section)} slides`);
+                    });
+                }
+
+                // Reset Current Section Design Button
+                const resetSecDesignBtn = document.getElementById('btn-reset-section-design');
+                if (resetSecDesignBtn) {
+                    resetSecDesignBtn.addEventListener('click', () => {
+                        state.sectionDesigns[state.section] = cloneDeep(DEFAULT_SECTION_DESIGNS[state.section]);
+                        persistState();
+                        renderSlide();
+                        showToast(`Reset ${formatSectionTitle(state.section)} design to default`);
+                    });
+                }
+
+                // Slide Content Edit Mode Buttons
+                const editBtn = document.getElementById('btn-toggle-edit');
+                const saveSlideBtn = document.getElementById('btn-save-slide');
+                const resetSlideBtn = document.getElementById('btn-reset-slide-content');
+
+                if (editBtn) {
+                    editBtn.addEventListener('click', () => setEditMode(!state.isEditMode));
+                }
+                if (saveSlideBtn) {
+                    saveSlideBtn.addEventListener('click', () => {
+                        const slide = state.slides[state.section][state.slideIndex];
+                        const newTitle = document.getElementById('input-title')?.value.trim();
+                        const newSub = document.getElementById('input-subtitle')?.value.trim() || '';
+                        const newBulletsRaw = document.getElementById('input-bullets')?.value || '';
+                        const newCode = document.getElementById('input-code')?.value || '';
+
+                        slide.title = newTitle || 'Untitled Slide';
+                        slide.subtitle = newSub;
+                        slide.bullets = newBulletsRaw.split('\n').map(line => line.trim()).filter(Boolean);
+                        if (slide.bullets.length === 0) {
+                            slide.bullets = ['Add bullet points using the Edit Slide panel.'];
+                        }
+                        slide.code = newCode;
+
+                        persistState();
+                        setEditMode(false);
+                        renderSlide();
+                        showToast('Slide content saved!');
+                    });
+                }
+                if (resetSlideBtn) {
+                    resetSlideBtn.addEventListener('click', () => {
+                        const original = DEFAULT_SLIDES[state.section][state.slideIndex];
+                        state.slides[state.section][state.slideIndex] = cloneDeep(original);
+                        persistState();
+                        setEditMode(false);
+                        renderSlide();
+                        showToast('Slide content restored to default.');
+                    });
+                }
+
+                // Prev / Next / Dots / Copy Code
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                const dotsContainer = document.getElementById('slide-dots');
+                const copyBtn = document.getElementById('btn-copy-code');
+
+                if (prevBtn) prevBtn.addEventListener('click', goPrevSlide);
+                if (nextBtn) nextBtn.addEventListener('click', goNextSlide);
+                if (dotsContainer) {
+                    dotsContainer.addEventListener('click', (e) => {
+                        const dot = e.target.closest('[data-dot-index]');
+                        if (dot) {
+                            state.slideIndex = Number(dot.getAttribute('data-dot-index')) || 0;
+                            setDesignPopoverOpen(false);
+                            renderSlide();
+                        }
+                    });
+                }
+                if (copyBtn) copyBtn.addEventListener('click', copyCurrentCode);
+
+                // Reset All Modal Controls
+                const resetModal = document.getElementById('reset-modal');
+                const openResetBtn = document.getElementById('btn-open-reset');
+                const cancelResetBtn = document.getElementById('btn-cancel-reset');
+                const confirmResetBtn = document.getElementById('btn-confirm-reset');
+
+                if (openResetBtn && resetModal) {
+                    openResetBtn.addEventListener('click', () => resetModal.classList.remove('hidden'));
+                }
+                if (cancelResetBtn && resetModal) {
+                    cancelResetBtn.addEventListener('click', () => resetModal.classList.add('hidden'));
+                }
+                if (confirmResetBtn && resetModal) {
+                    confirmResetBtn.addEventListener('click', () => {
+                        state.slides = cloneDeep(DEFAULT_SLIDES);
+                        state.sectionDesigns = cloneDeep(DEFAULT_SECTION_DESIGNS);
+                        state.slideIndex = 0;
+                        persistState();
+                        if (state.isEditMode) setEditMode(false);
+                        setDesignPopoverOpen(false);
+                        resetModal.classList.add('hidden');
+                        renderSlide();
+                        showToast('All 5 sections and slide designs reset.');
+                    });
+                }
+
+                // Outside Click Dismissal for Popover & Modal
+                document.addEventListener('click', (e) => {
+                    if (state.isDesignOpen && popover && designBtn) {
+                        if (!popover.contains(e.target) && !designBtn.contains(e.target)) {
+                            setDesignPopoverOpen(false);
+                        }
+                    }
+                    if (resetModal && !resetModal.classList.contains('hidden') && e.target === resetModal) {
+                        resetModal.classList.add('hidden');
+                    }
+                });
+
+                // Keyboard Navigation (Safely ignored inside form inputs)
+                document.addEventListener('keydown', (e) => {
+                    const tag = document.activeElement ? document.activeElement.tagName : '';
+                    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+
+                    if (e.key === 'Escape') {
+                        if (state.isDesignOpen) setDesignPopoverOpen(false);
+                        if (resetModal && !resetModal.classList.contains('hidden')) resetModal.classList.add('hidden');
+                        if (state.isEditMode && !isTyping) setEditMode(false);
+                        return;
+                    }
+
+                    if (isTyping) return;
+
+                    if (e.key === 'ArrowRight') {
+                        goNextSlide();
+                    } else if (e.key === 'ArrowLeft') {
+                        goPrevSlide();
+                    }
+                });
+            }
+
+            /* =====================================================================
+               6. INITIALIZATION
+               ===================================================================== */
+            window.addEventListener('DOMContentLoaded', () => {
+                loadPersistedState();
+                bindEvents();
+                renderSlide();
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MI7 HOLOGRAPHIC PROJECTION TERMINAL // V.4.2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+    :root {
+      --holo-primary: #00f3ff;
+      --holo-secondary: #0066ff;
+      --holo-alert: #ff2a55;
+      --bg-dark: #03070c;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-dark);
+      color: var(--holo-primary);
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: radial-gradient(circle at 50% 45%, #07192b 0%, #02050a 75%, #000000 100%);
+    }
+
+    /* CRT Vignette & Grid Overlay */
+    .hud-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: 
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+        radial-gradient(circle at center, transparent 55%, rgba(0, 5, 12, 0.85) 100%);
+      background-size: 100% 4px, 100% 100%;
+    }
+
+    .hud-panel {
+      background: rgba(4, 16, 28, 0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 243, 255, 0.28);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.08), inset 0 0 12px rgba(0, 243, 255, 0.05);
+      pointer-events: auto;
+    }
+
+    .corner-bracket {
+      position: relative;
+    }
+    .corner-bracket::before, .corner-bracket::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-color: var(--holo-primary);
+      border-style: solid;
+      pointer-events: none;
+    }
+    .corner-bracket::before {
+      top: -1px; left: -1px;
+      border-width: 2px 0 0 2px;
+    }
+    .corner-bracket::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 2px 2px 0;
+    }
+
+    .font-display {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Custom Range Sliders */
+    input[type="range"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(0, 243, 255, 0.2);
+      outline: none;
+      border-radius: 2px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--holo-primary);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--holo-primary);
+      border-radius: 1px;
+    }
+
+    .btn-holo {
+      background: rgba(0, 243, 255, 0.08);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      color: var(--holo-primary);
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .btn-holo:hover {
+      background: rgba(0, 243, 255, 0.22);
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+    }
+    .btn-holo.active {
+      background: var(--holo-primary);
+      color: #020810;
+      font-weight: bold;
+      box-shadow: 0 0 15px var(--holo-primary);
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .animate-blink {
+      animation: pulse-glow 2s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D WebGL Viewport -->
+  <div id="canvas-container"></div>
+
+  <!-- CRT & Vignette Overlay -->
+  <div class="hud-overlay"></div>
+
+  <!-- Top Telemetry Header -->
+  <header class="fixed top-0 left-0 right-0 z-10 p-4 md:p-6 flex flex-wrap justify-between items-start pointer-events-none gap-4">
+    <div class="hud-panel corner-bracket px-4 py-3 max-w-md">
+      <div class="flex items-center gap-2 text-xs text-cyan-300/70 mb-1">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-blink"></span>
+        <span>MI7 // TACTICAL HOLO-EMITTER UNIT 09</span>
+      </div>
+      <h1 class="font-display text-lg md:text-xl font-bold tracking-wider text-cyan-300">
+        OPERATIVE DOSSIER PROJECTION
+      </h1>
+      <div class="text-[11px] text-cyan-400/70 mt-1 flex gap-4">
+        <span>FREQ: 48.92 THz</span>
+        <span>SYNC: <span id="sync-status" class="text-emerald-400">LOCKED</span></span>
+        <span>FPS: <span id="fps-counter">60</span></span>
+      </div>
+    </div>
+
+    <!-- Operative Bio Readout -->
+    <div class="hud-panel corner-bracket px-4 py-3 text-right hidden sm:block">
+      <div class="text-xs text-cyan-300/70">ACTIVE SUBJECT</div>
+      <div id="operative-name" class="font-display text-base font-bold text-white tracking-widest">AGENT // DEV-01</div>
+      <div id="operative-role" class="text-xs text-cyan-400">PRINCIPAL SYSTEMS ARCHITECT</div>
+      <div class="text-[10px] text-cyan-300/60 mt-1">CLEARANCE: TOP SECRET // EYES ONLY</div>
+    </div>
+  </header>
+
+  <!-- Left Preset Selector -->
+  <aside class="fixed left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 hidden lg:flex flex-col gap-2 hud-panel corner-bracket p-3 w-52">
+    <div class="text-[11px] text-cyan-300/70 border-b border-cyan-500/30 pb-1 mb-1 tracking-widest">
+      OPERATIVE DATABASE
+    </div>
+    <button class="btn-holo active text-xs py-2 px-3 text-left preset-btn" data-preset="0">
+      01 // DEV-01 (ARCHITECT)
+    </button>
+    <button class="btn-holo text-xs py-2 px-3 text-left preset-btn" data-preset="1">
+      02 // SPECTRE (SEC-OPS)
+    </button>
+    <button class="btn-holo text-xs py-2 px-3 text-left preset-btn" data-preset="2">
+      03 // CIPHER (AI CORE)
+    </button>
+    <div class="mt-2 pt-2 border-t border-cyan-500/30">
+      <label class="btn-holo text-xs py-2 px-3 block text-center cursor-pointer">
+        <span>+ UPLOAD PORTRAIT</span>
+        <input type="file" id="photo-upload" accept="image/png, image/jpeg, image/webp" class="hidden" />
+      </label>
+      <p class="text-[10px] text-cyan-400/60 mt-1.5 leading-tight">
+        Extrudes 2D luminance into 3D holographic depth mesh.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Bottom / Right Interactive Control Deck -->
+  <section class="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 z-10 hud-panel corner-bracket p-4 md:w-80">
+    <div class="flex justify-between items-center border-b border-cyan-500/30 pb-2 mb-3">
+      <span class="font-display text-xs font-bold tracking-widest text-cyan-300">EMITTER CONTROLS</span>
+      <button id="btn-glitch" class="text-[10px] px-2 py-0.5 border border-rose-500/70 text-rose-400 hover:bg-rose-500/20 uppercase tracking-wider transition">
+        TRIGGER GLITCH
+      </button>
+    </div>
+
+    <!-- Mobile Upload & Preset Row -->
+    <div class="flex gap-2 mb-3 lg:hidden">
+      <button class="btn-holo active text-[10px] py-1.5 px-2 flex-1 preset-btn" data-preset="0">DEV-01</button>
+      <button class="btn-holo text-[10px] py-1.5 px-2 flex-1 preset-btn" data-preset="1">SPECTRE</button>
+      <button class="btn-holo text-[10px] py-1.5 px-2 flex-1 preset-btn" data-preset="2">CIPHER</button>
+      <label class="btn-holo text-[10px] py-1.5 px-2 flex-1 text-center cursor-pointer">
+        UPLOAD
+        <input type="file" id="photo-upload-mobile" accept="image/*" class="hidden" />
+      </label>
+    </div>
+
+    <!-- Render Mode Toggles -->
+    <div class="grid grid-cols-3 gap-1.5 mb-3">
+      <button id="mode-hybrid" class="btn-holo active text-[10px] py-1.5">HYBRID</button>
+      <button id="mode-points" class="btn-holo text-[10px] py-1.5">POINTS</button>
+      <button id="mode-wire" class="btn-holo text-[10px] py-1.5">WIREFRAME</button>
+    </div>
+
+    <!-- Sliders -->
+    <div class="space-y-2.5 text-xs">
+      <div>
+        <div class="flex justify-between text-[11px] mb-1">
+          <span class="text-cyan-300/80">DEPTH EXTRUSION</span>
+          <span id="val-depth">0.55</span>
+        </div>
+        <input type="range" id="slider-depth" min="0.0" max="1.2" step="0.05" value="0.55" />
+      </div>
+
+      <div>
+        <div class="flex justify-between text-[11px] mb-1">
+          <span class="text-cyan-300/80">SCANLINE INTENSITY</span>
+          <span id="val-scanline">0.65</span>
+        </div>
+        <input type="range" id="slider-scanline" min="0.0" max="1.0" step="0.05" value="0.65" />
+      </div>
+
+      <div>
+        <div class="flex justify-between text-[11px] mb-1">
+          <span class="text-cyan-300/80">GLITCH FREQUENCY</span>
+          <span id="val-glitch">0.25</span>
+        </div>
+        <input type="range" id="slider-glitch" min="0.0" max="1.0" step="0.05" value="0.25" />
+      </div>
+    </div>
+
+    <!-- Color Palette Selector -->
+    <div class="mt-3 pt-2.5 border-t border-cyan-500/30 flex items-center justify-between">
+      <span class="text-[11px] text-cyan-300/80">WAVELENGTH</span>
+      <div class="flex gap-2">
+        <button class="w-5 h-5 rounded-sm bg-cyan-400 border border-white color-btn" data-color="#00f3ff" data-sec="#0055ff" title="MI7 Cyan"></button>
+        <button class="w-5 h-5 rounded-sm bg-amber-400 border border-transparent color-btn" data-color="#ffb700" data-sec="#ff5500" title="Tactical Amber"></button>
+        <button class="w-5 h-5 rounded-sm bg-emerald-400 border border-transparent color-btn" data-color="#00ff88" data-sec="#008844" title="Night-Ops Emerald"></button>
+        <button class="w-5 h-5 rounded-sm bg-rose-500 border border-transparent color-btn" data-color="#ff2a55" data-sec="#880022" title="Rogue Crimson"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom GLSL Shaders -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    uniform sampler2D uTexture;
+    uniform float uDepthScale;
+    uniform float uTime;
+    uniform float uGlitchIntensity;
+    uniform float uGlitchBurst;
+    uniform float uPointSize;
+
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying float vLuminance;
+    varying float vGlitchOffset;
+
+    // Pseudo-random generator
+    float rand(vec2 co) {
+      return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void main() {
+      vUv = uv;
+
+      // Sample image texture for luminance depth extrusion
+      vec4 texColor = texture2D(uTexture, uv);
+      float luminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+      vLuminance = luminance;
+
+      // Smooth radial falloff near edges so bust floats cleanly
+      vec2 centeredUv = uv * 2.0 - 1.0;
+      float radialDist = length(centeredUv);
+      float edgeMask = 1.0 - smoothstep(0.65, 1.0, radialDist);
+
+      // Base cylindrical/bust curvature + luminance depth extrusion
+      vec3 displacedPosition = position;
+      float bustCurve = cos(centeredUv.x * 1.1) * 0.25 * edgeMask;
+      displacedPosition.z += (luminance * uDepthScale * edgeMask) + bustCurve;
+
+      // Horizontal Glitch Displacement
+      float glitchWave = sin(uv.y * 35.0 + uTime * 18.0);
+      float noiseTrigger = step(0.96 - (uGlitchIntensity * 0.15) - (uGlitchBurst * 0.4), rand(vec2(floor(uTime * 14.0), floor(uv.y * 22.0))));
+      float glitchShift = noiseTrigger * (rand(vec2(uTime, uv.y)) - 0.5) * (0.18 + uGlitchBurst * 0.45);
+      displacedPosition.x += glitchShift;
+      vGlitchOffset = abs(glitchShift);
+
+      // Subtle holographic floating micro-vibration
+      displacedPosition.y += sin(uTime * 2.2 + displacedPosition.x * 4.0) * 0.008;
+
+      vec4 mvPosition = modelViewMatrix * vec4(displacedPosition, 1.0);
+      vViewPosition = -mvPosition.xyz;
+      vNormal = normalize(normalMatrix * normal);
+
+      gl_Position = projectionMatrix * mvPosition;
+      gl_PointSize = uPointSize * (1.5 / -mvPosition.z) * (0.6 + luminance * 0.8);
+    }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    uniform sampler2D uTexture;
+    uniform float uTime;
+    uniform vec3 uColorPrimary;
+    uniform vec3 uColorSecondary;
+    uniform float uScanlineIntensity;
+    uniform float uGlitchBurst;
+    uniform float uOpacity;
+    uniform bool uIsPoints;
+
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vViewPosition;
+    varying float vLuminance;
+    varying float vGlitchOffset;
+
+    float rand(vec2 co) {
+      return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void main() {
+      // Circular soft particle shape when rendering in Points mode
+      if (uIsPoints) {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float dist = length(coord);
+        if (dist > 0.5) discard;
+      }
+
+      // Chromatic Aberration RGB channel split
+      float aberration = 0.004 + vGlitchOffset * 0.08 + uGlitchBurst * 0.015;
+      float r = texture2D(uTexture, vUv + vec2(aberration, 0.0)).r;
+      float g = texture2D(uTexture, vUv).g;
+      float b = texture2D(uTexture, vUv - vec2(aberration, 0.0)).b;
+
+      float lumR = dot(vec3(r, g, b), vec3(0.35, 0.5, 0.15));
+      
+      // Radial vignette mask to dissolve edges into thin air
+      vec2 centeredUv = vUv * 2.0 - 1.0;
+      float radialMask = 1.0 - smoothstep(0.55, 0.98, length(centeredUv));
+      if (radialMask <= 0.02) discard;
+
+      // Fresnel Rim Glow effect
+      vec3 viewDir = normalize(vViewPosition);
+      float fresnel = pow(1.0 - abs(dot(viewDir, normalize(vNormal))), 2.2);
+
+      // Animated Horizontal Scanlines & Rolling Sweeps
+      float fineScanline = sin(vUv.y * 260.0 - uTime * 8.0) * 0.5 + 0.5;
+      float coarseBand = sin(vUv.y * 18.0 - uTime * 3.5) * 0.5 + 0.5;
+      float scanEffect = mix(1.0, fineScanline * 0.75 + coarseBand * 0.35, uScanlineIntensity);
+
+      // High-frequency digital interference flicker
+      float flicker = 0.94 + 0.06 * sin(uTime * 45.0 + vUv.y * 10.0);
+      float staticNoise = (rand(vUv + vec2(uTime * 0.1, 0.0)) - 0.5) * 0.08;
+
+      // Combine holographic colors
+      vec3 baseHolo = mix(uColorSecondary, uColorPrimary, clamp(lumR * 1.35 + fresnel * 0.6, 0.0, 1.0));
+      
+      // Add chromatic fringe tint during glitches
+      baseHolo.r += (r - g) * (0.6 + uGlitchBurst);
+      baseHolo.b += (b - g) * (0.6 + uGlitchBurst);
+
+      // Boost highlights & Fresnel rim
+      vec3 finalColor = baseHolo * (0.45 + lumR * 1.25) * scanEffect * flicker + (uColorPrimary * fresnel * 0.65) + staticNoise;
+
+      float alpha = clamp((lumR * 0.85 + fresnel * 0.4 + 0.15) * radialMask * uOpacity, 0.0, 0.95);
+      gl_FragColor = vec4(finalColor, alpha);
+    }
+  </script>
+
+  <!-- Main Application Logic -->
+  <script>
+    // --- OPERATIVE PRESET DATA & PROCEDURAL PORTRAIT GENERATOR ---
+    const OPERATIVES = [
+      {
+        name: "AGENT // DEV-01",
+        role: "PRINCIPAL SYSTEMS ARCHITECT",
+        seed: 1,
+        primary: "#00f3ff",
+        secondary: "#0055ff"
+      },
+      {
+        name: "AGENT // SPECTRE",
+        role: "OFFENSIVE CYBER OPERATIONS",
+        seed: 2,
+        primary: "#00ff88",
+        secondary: "#007744"
+      },
+      {
+        name: "AGENT // CIPHER",
+        role: "NEURAL CRYPTOGRAPHY LEAD",
+        seed: 3,
+        primary: "#ffb700",
+        secondary: "#ff4400"
+      }
+    ];
+
+    // Generates a detailed high-contrast cybernetic portrait texture if no custom image is uploaded
+    function createProceduralOperativeTexture(seed = 1) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Deep dark background
+      ctx.fillStyle = '#020408';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Subtle background tech grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 512; i += 24) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+      }
+
+      // Shoulders / Suit Collar
+      const shoulderGrad = ctx.createLinearGradient(256, 330, 256, 512);
+      shoulderGrad.addColorStop(0, '#a0a0a0');
+      shoulderGrad.addColorStop(1, '#151515');
+      ctx.fillStyle = shoulderGrad;
+      ctx.beginPath();
+      ctx.moveTo(95, 512);
+      ctx.quadraticCurveTo(120, 365, 210, 350);
+      ctx.lineTo(302, 350);
+      ctx.quadraticCurveTo(392, 365, 417, 512);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suit Lapels & Tie
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.moveTo(210, 350);
+      ctx.lineTo(256, 470);
+      ctx.lineTo(302, 350);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(246, 365);
+      ctx.lineTo(266, 365);
+      ctx.lineTo(262, 460);
+      ctx.lineTo(256, 475);
+      ctx.lineTo(250, 460);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neck
+      const neckGrad = ctx.createLinearGradient(215, 290, 297, 290);
+      neckGrad.addColorStop(0, '#444');
+      neckGrad.addColorStop(0.5, '#bbb');
+      neckGrad.addColorStop(1, '#444');
+      ctx.fillStyle = neckGrad;
+      ctx.fillRect(220, 285, 72, 75);
+
+      // Head / Cranium Sculpted Luminance
+      const headGrad = ctx.createRadialGradient(256, 200, 15, 256, 215, 115);
+      headGrad.addColorStop(0, '#ffffff');
+      headGrad.addColorStop(0.55, '#b8b8b8');
+      headGrad.addColorStop(0.85, '#4a4a4a');
+      headGrad.addColorStop(1, '#111111');
+      ctx.fillStyle = headGrad;
+
+      ctx.beginPath();
+      ctx.moveTo(175, 185);
+      ctx.bezierCurveTo(175, 95, 337, 95, 337, 185);
+      ctx.bezierCurveTo(337, 260, 300, 315, 256, 322);
+      ctx.bezierCurveTo(212, 315, 175, 260, 175, 185);
+      ctx.fill();
+
+      // Brow & Cheekbone Highlights for 3D Depth
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.beginPath();
+      ctx.ellipse(222, 182, 28, 10, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(290, 182, 28, 10, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes / Tactical Visor variations by Operative Seed
+      if (seed === 1) {
+        // Classic Spy Shades
+        ctx.fillStyle = '#080808';
+        ctx.fillRect(192, 184, 54, 22);
+        ctx.fillRect(266, 184, 54, 22);
+        ctx.fillRect(244, 188, 24, 6);
+        // Specular reflection on shades
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(198, 188, 18, 4);
+        ctx.fillRect(272, 188, 18, 4);
+      } else if (seed === 2) {
+        // Tactical Monocle / AR Visor
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(222, 195, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(290, 195, 20, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(290, 195, 6, 0, Math.PI * 2); ctx.fill();
+      } else {
+        // Full Cybernetic Visor
+        const visorGrad = ctx.createLinearGradient(185, 182, 327, 206);
+        visorGrad.addColorStop(0, '#ffffff');
+        visorGrad.addColorStop(0.5, '#666666');
+        visorGrad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = visorGrad;
+        ctx.fillRect(186, 183, 140, 22);
+      }
+
+      // Nose Bridge & Tip (High Luminance = Strong Z-Extrusion)
+      const noseGrad = ctx.createLinearGradient(256, 185, 256, 250);
+      noseGrad.addColorStop(0, '#cccccc');
+      noseGrad.addColorStop(0.8, '#ffffff');
+      noseGrad.addColorStop(1, '#555555');
+      ctx.fillStyle = noseGrad;
+      ctx.beginPath();
+      ctx.moveTo(250, 190);
+      ctx.lineTo(262, 190);
+      ctx.lineTo(268, 245);
+      ctx.lineTo(256, 253);
+      ctx.lineTo(244, 245);
+      ctx.closePath();
+      ctx.fill();
+
+      // Mouth / Jawline contour
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(230, 276);
+      ctx.quadraticCurveTo(256, 282, 282, 276);
+      ctx.stroke();
+
+      // Chin Highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(256, 298, 18, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Biometric targeting reticles around face
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(256, 215, 138, -0.4, 0.4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(256, 215, 138, Math.PI - 0.4, Math.PI + 0.4);
+      ctx.stroke();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // --- THREE.JS SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x03070c, 0.14);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0.35, 3.6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 1.8;
+    controls.maxDistance = 6.5;
+    controls.maxPolarAngle = Math.PI * 0.62;
+    controls.target.set(0, 0.15, 0);
+
+    // --- HOLOGRAM SHADER UNIFORMS ---
+    const initialTexture = createProceduralOperativeTexture(1);
+    const uniforms = {
+      uTexture: { value: initialTexture },
+      uDepthScale: { value: 0.55 },
+      uTime: { value: 0 },
+      uColorPrimary: { value: new THREE.Color('#00f3ff') },
+      uColorSecondary: { value: new THREE.Color('#0055ff') },
+      uScanlineIntensity: { value: 0.65 },
+      uGlitchIntensity: { value: 0.25 },
+      uGlitchBurst: { value: 0.0 },
+      uOpacity: { value: 0.9 },
+      uPointSize: { value: 6.5 },
+      uIsPoints: { value: false }
+    };
+
+    // High-density segmented plane for smooth 3D vertex extrusion
+    const bustGeometry = new THREE.PlaneGeometry(1.85, 1.85, 160, 160);
+
+    // 1. Wireframe / Translucent Mesh Layer
+    const meshMaterial = new THREE.ShaderMaterial({
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent,
+      uniforms: THREE.UniformsUtils.clone(uniforms),
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      wireframe: true
+    });
+
+    // 2. Point-Cloud Particle Layer
+    const pointsUniforms = THREE.UniformsUtils.clone(uniforms);
+    pointsUniforms.uIsPoints.value = true;
+    const pointsMaterial = new THREE.ShaderMaterial({
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent,
+      uniforms: pointsUniforms,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const hologramGroup = new THREE.Group();
+    hologramGroup.position.y = 0.25;
+    scene.add(hologramGroup);
+
+    const holoMesh = new THREE.Mesh(bustGeometry, meshMaterial);
+    const holoPoints = new THREE.Points(bustGeometry, pointsMaterial);
+    hologramGroup.add(holoMesh);
+    hologramGroup.add(holoPoints);
+
+    // --- PROJECTOR BASE & VOLUMETRIC LIGHT BEAM ---
+    const projectorGroup = new THREE.Group();
+    projectorGroup.position.y = -0.95;
+    scene.add(projectorGroup);
+
+    // Outer Emitter Ring
+    const ringGeo1 = new THREE.RingGeometry(0.68, 0.74, 64);
+    const ringMat1 = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending
+    });
+    const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+    ring1.rotation.x = -Math.PI / 2;
+    projectorGroup.add(ring1);
+
+    // Inner Dashed Emitter Ring
+    const ringGeo2 = new THREE.RingGeometry(0.45, 0.50, 32, 1, 0, Math.PI * 1.5);
+    const ringMat2 = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending
+    });
+    const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ring2.rotation.x = -Math.PI / 2;
+    ring2.position.y = 0.02;
+    projectorGroup.add(ring2);
+
+    // Emitter Core Disk
+    const coreGeo = new THREE.CircleGeometry(0.32, 32);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending
+    });
+    const coreDisk = new THREE.Mesh(coreGeo, coreMat);
+    coreDisk.rotation.x = -Math.PI / 2;
+    coreDisk.position.y = 0.01;
+    projectorGroup.add(coreDisk);
+
+    // Volumetric Projection Light Cone
+    const coneGeo = new THREE.CylinderGeometry(0.95, 0.32, 1.35, 48, 1, true);
+    const coneMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: new THREE.Color('#00f3ff') },
+        uTime: { value: 0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float verticalFade = pow(1.0 - vUv.y, 1.8);
+          float rays = sin(vUv.x * 62.8318 + uTime * 1.5) * 0.15 + 0.85;
+          gl_FragColor = vec4(uColor, verticalFade * 0.16 * rays);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    });
+    const lightCone = new THREE.Mesh(coneGeo, coneMat);
+    lightCone.position.y = 0.67;
+    projectorGroup.add(lightCone);
+
+    // Ambient Floating Data Dust Particles
+    const dustCount = 280;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount * 3; i += 3) {
+      dustPos[i] = (Math.random() - 0.5) * 3.5;
+      dustPos[i + 1] = (Math.random() - 0.5) * 2.5;
+      dustPos[i + 2] = (Math.random() - 0.5) * 3.5;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustMat = new THREE.PointsMaterial({
+      color: 0x00f3ff,
+      size: 0.02,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending
+    });
+    const dustParticles = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustParticles);
+
+    // --- SYNCHRONIZED UNIFORM UPDATER ---
+    function syncUniform(key, value) {
+      meshMaterial.uniforms[key].value = value;
+      pointsMaterial.uniforms[key].value = value;
+    }
+
+    function updateHologramColor(primaryHex, secondaryHex) {
+      const pCol = new THREE.Color(primaryHex);
+      const sCol = new THREE.Color(secondaryHex);
+
+      syncUniform('uColorPrimary', pCol);
+      syncUniform('uColorSecondary', sCol);
+
+      ringMat1.color.copy(pCol);
+      ringMat2.color.copy(pCol);
+      coreMat.color.copy(pCol);
+      coneMat.uniforms.uColor.value.copy(pCol);
+      dustMat.color.copy(pCol);
+
+      document.documentElement.style.setProperty('--holo-primary', primaryHex);
+    }
+
+    function triggerGlitchBurst() {
+      const syncEl = document.getElementById('sync-status');
+      syncEl.textContent = 'INTERFERENCE';
+      syncEl.className = 'text-rose-400';
+
+      gsap.fromTo(
+        { val: 1.0 },
+        { val: 1.0 },
+        {
+          val: 0.0,
+          duration: 0.55,
+          ease: 'power3.out',
+          onUpdate: function () {
+            syncUniform('uGlitchBurst', this.targets()[0].val);
+          },
+          onComplete: () => {
+            syncEl.textContent = 'LOCKED';
+            syncEl.className = 'text-emerald-400';
+          }
+        }
+      );
+    }
+
+    // --- INTERACTIVE UI BINDINGS ---
+    // 1. Sliders
+    document.getElementById('slider-depth').addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      document.getElementById('val-depth').textContent = val.toFixed(2);
+      syncUniform('uDepthScale', val);
+    });
+
+    document.getElementById('slider-scanline').addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      document.getElementById('val-scanline').textContent = val.toFixed(2);
+      syncUniform('uScanlineIntensity', val);
+    });
+
+    document.getElementById('slider-glitch').addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      document.getElementById('val-glitch').textContent = val.toFixed(2);
+      syncUniform('uGlitchIntensity', val);
+    });
+
+    // 2. Glitch Button
+    document.getElementById('btn-glitch').addEventListener('click', triggerGlitchBurst);
+
+    // 3. Projection Modes
+    const modeBtns = ['mode-hybrid', 'mode-points', 'mode-wire'];
+    function setProjectionMode(mode) {
+      modeBtns.forEach(id => document.getElementById(id).classList.remove('active'));
+      document.getElementById(`mode-${mode}`).classList.add('active');
+
+      if (mode === 'hybrid') {
+        holoMesh.visible = true;
+        holoPoints.visible = true;
+        meshMaterial.wireframe = true;
+        meshMaterial.uniforms.uOpacity.value = 0.45;
+      } else if (mode === 'points') {
+        holoMesh.visible = false;
+        holoPoints.visible = true;
+      } else if (mode === 'wire') {
+        holoMesh.visible = true;
+        holoPoints.visible = false;
+        meshMaterial.wireframe = true;
+        meshMaterial.uniforms.uOpacity.value = 0.9;
+      }
+      triggerGlitchBurst();
+    }
+
+    document.getElementById('mode-hybrid').addEventListener('click', () => setProjectionMode('hybrid'));
+    document.getElementById('mode-points').addEventListener('click', () => setProjectionMode('points'));
+    document.getElementById('mode-wire').addEventListener('click', () => setProjectionMode('wire'));
+
+    // 4. Operative Presets
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.preset);
+        const op = OPERATIVES[idx];
+
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          b.classList.toggle('active', parseInt(b.dataset.preset) === idx);
+        });
+
+        document.getElementById('operative-name').textContent = op.name;
+        document.getElementById('operative-role').textContent = op.role;
+
+        const tex = createProceduralOperativeTexture(op.seed);
+        syncUniform('uTexture', tex);
+        updateHologramColor(op.primary, op.secondary);
+        triggerGlitchBurst();
+      });
+    });
+
+    // 5. Color Palette Buttons
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.replace('border-white', 'border-transparent'));
+        btn.classList.replace('border-transparent', 'border-white');
+        updateHologramColor(btn.dataset.color, btn.dataset.sec);
+      });
+    });
+
+    // 6. Custom Photo Upload (Photo-to-3D Hologram)
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          // Draw onto square canvas with radial vignette for clean 3D bust edges
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+
+          // Center-crop image
+          const size = Math.min(img.width, img.height);
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, 512, 512);
+
+          // Apply radial edge fade mask
+          ctx.globalCompositeOperation = 'destination-in';
+          const grad = ctx.createRadialGradient(256, 256, 140, 256, 256, 250);
+          grad.addColorStop(0, 'rgba(0,0,0,1)');
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 512, 512);
+
+          const uploadedTexture = new THREE.CanvasTexture(canvas);
+          uploadedTexture.needsUpdate = true;
+
+          syncUniform('uTexture', uploadedTexture);
+          document.getElementById('operative-name').textContent = 'AGENT // CUSTOM-ID';
+          document.getElementById('operative-role').textContent = 'EXTERNAL BIOMETRIC UPLOAD';
+          document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+          triggerGlitchBurst();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('photo-upload').addEventListener('change', handleImageUpload);
+    document.getElementById('photo-upload-mobile').addEventListener('change', handleImageUpload);
+
+    // --- ANIMATION LOOP ---
+    const clock = new THREE.Clock();
+    let frameCount = 0;
+    let lastFpsTime = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      syncUniform('uTime', elapsed);
+      coneMat.uniforms.uTime.value = elapsed;
+
+      // Subtle holographic idle sway & projector ring rotations
+      hologramGroup.rotation.y = Math.sin(elapsed * 0.55) * 0.22;
+      ring1.rotation.z = elapsed * 0.35;
+      ring2.rotation.z = -elapsed * 0.7;
+      dustParticles.rotation.y = elapsed * 0.08;
+
+      controls.update();
+      renderer.render(scene, camera);
+
+      // Update FPS Telemetry
+      frameCount++;
+      const now = performance.now();
+      if (now - lastFpsTime >= 1000) {
+        document.getElementById('fps-counter').textContent = frameCount;
+        frameCount = 0;
+        lastFpsTime = now;
+      }
+    }
+
+    // Boot-up Hologram Entrance Animation
+    gsap.from(hologramGroup.scale, {
+      x: 0.01,
+      y: 0.01,
+      z: 0.01,
+      duration: 1.1,
+      ease: 'expo.out',
+      onStart: triggerGlitchBurst
+    });
+
+    // Responsive Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
